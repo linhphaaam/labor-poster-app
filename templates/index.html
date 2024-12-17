@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload or Capture Image</title>
+</head>
+<body>
+    <h1>Upload or Capture Image</h1>
+    <form id="uploadForm" method="POST" action="/process" enctype="multipart/form-data">
+        <label for="fileInput">Choose a file:</label>
+        <input type="file" id="fileInput" name="file" accept="image/*">
+
+        <h2>Or capture from your camera:</h2>
+        <video id="camera" autoplay playsinline></video>
+        <button type="button" id="captureButton">Capture Photo</button>
+        <canvas id="snapshotCanvas" style="display:none;"></canvas>
+        <input type="hidden" name="image_data" id="imageData">
+
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        const video = document.getElementById('camera');
+        const canvas = document.getElementById('snapshotCanvas');
+        const captureButton = document.getElementById('captureButton');
+        const imageDataInput = document.getElementById('imageData');
+        const submitButton = document.querySelector("button[type='submit']");
+    
+        // Access the user's camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((error) => {
+                console.error("Error accessing the camera: ", error);
+            });
+    
+        // Capture photo
+        captureButton.addEventListener('click', () => {
+            const maxCanvasSize = 800; // Limit size to 800px for width/height
+            const scale = Math.min(maxCanvasSize / video.videoWidth, maxCanvasSize / video.videoHeight);
+            canvas.width = video.videoWidth * scale;
+            canvas.height = video.videoHeight * scale;
+
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert to base64 (JPEG format, reduced quality)
+            const dataURL = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+            imageDataInput.value = dataURL;
+
+            alert("Photo captured and resized! You can now submit the form.");
+            submitButton.disabled = false; // Enable the submit button
+        });
+    
+        // Disable submit button initially
+        submitButton.disabled = false;
+    </script>
+    
+</body>
+</html>
