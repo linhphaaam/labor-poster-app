@@ -44,6 +44,7 @@ def preprocess_image_from_base64(base64_str):
     img.thumbnail((1024, 1024))  # Resize directly here
     return preprocess(img).unsqueeze(0).to(device)
 
+
 # ------------------------------
 # Step 1: Data Preprocessing
 # ------------------------------
@@ -124,59 +125,90 @@ def calculate_similarities(input_embedding, dataset_embeddings):
 # Spiral Visualization
 # ------------------------------
 
-def spiral_coordinates(num_points, center=(0, 0), spacing=0.5):
-    """Generate coordinates for a spiral layout."""
-    theta = np.linspace(0, 4 * np.pi, num_points)
-    radius = np.linspace(3, spacing * num_points, num_points)
+def spiral_coordinates(num_points, center=(0, 0), spacing=20):
+    """Generate coordinates for a two-point spiral layout with constant radial growth."""
+    theta = np.linspace(0, 2 * np.pi * num_points / 8, num_points)  # Control angle growth
+    radius = np.linspace(20, spacing * num_points / 8, num_points)  # Constant radial spacing
     x = center[0] + radius * np.cos(theta)
-    y = center[1] + radius * np.sin(theta)
+    y = center[1] - radius * np.sin(theta)
     return x, y
 
-def imscatter(x, y, image_paths, ax=None, max_width=60, max_height=60):
-    """Place images at specified coordinates on a plot."""
-    if ax is None:
-        ax = plt.gca()
-    for xx, yy, img_path in zip(x, y, image_paths):
-        if not img_path or not os.path.exists(img_path):
-            logging.warning(f"Invalid or missing image path: {img_path}. Skipping...")
-            continue
-        try:
-            img = Image.open(img_path)
-            img.thumbnail((max_width, max_height), Image.LANCZOS)
-            im = OffsetImage(img, zoom=1)
-            ab = AnnotationBbox(im, (xx, yy), frameon=False)
-            ax.add_artist(ab)
-        except Exception as e:
-            logging.error(f"Failed to process image {img_path}: {e}")
+
+# def imscatter(x, y, image_paths, ax=None, max_width=60, max_height=60):
+#     """Place images at specified coordinates on a plot."""
+#     if ax is None:
+#         ax = plt.gca()
+#     for xx, yy, img_path in zip(x, y, image_paths):
+#         if not img_path or not os.path.exists(img_path):
+#             logging.warning(f"Invalid or missing image path: {img_path}. Skipping...")
+#             continue
+#         try:
+#             img = Image.open(img_path)
+#             img.thumbnail((max_width, max_height), Image.LANCZOS)
+#             im = OffsetImage(img, zoom=1)
+#             ab = AnnotationBbox(im, (xx, yy), frameon=False)
+#             ax.add_artist(ab)
+#         except Exception as e:
+#             logging.error(f"Failed to process image {img_path}: {e}")
 
 
-def visualize_spiral(input_img_path, poster_images, similarities, poster_data_top_n, output_path="static/spiral_plot.png"):
-    if not os.path.exists(input_img_path):
-        raise FileNotFoundError(f"Input image path does not exist: {input_img_path}")
-    valid_poster_images = [img for img in poster_images if os.path.exists(img)]
-    logging.debug(f"Valid poster images: {valid_poster_images}")
+# def visualize_spiral(input_img_path, poster_images, similarities, poster_data_top_n, output_path="static/spiral_plot.png"):
+#     if not os.path.exists(input_img_path):
+#         raise FileNotFoundError(f"Input image path does not exist: {input_img_path}")
+#     valid_poster_images = [img for img in poster_images if os.path.exists(img)]
+#     logging.debug(f"Valid poster images: {valid_poster_images}")
     
-    num_points = len(valid_poster_images)
-    spiral_x, spiral_y = spiral_coordinates(num_points, center=(0, 0), spacing=0.5)
+#     num_points = len(valid_poster_images)
+#     spiral_x, spiral_y = spiral_coordinates(num_points, center=(0, 0), spacing=0.5)
 
-    plt.figure(figsize=(12, 12))
-    imscatter([0], [0], [input_img_path], max_width=60, max_height=60)
-    imscatter(spiral_x, spiral_y, valid_poster_images, max_width=60, max_height=60)
+#     plt.figure(figsize=(12, 12))
+#     imscatter([0], [0], [input_img_path], max_width=60, max_height=60)
+#     imscatter(spiral_x, spiral_y, valid_poster_images, max_width=60, max_height=60)
 
-    plt.plot(spiral_x, spiral_y, 'r-', alpha=0.3)
+#     plt.plot(spiral_x, spiral_y, 'r-', alpha=0.3)
 
-    for i in range(num_points):
-        plt.plot([0, spiral_x[i]], [0, spiral_y[i]], 'k--', alpha=0.2)
-        mid_x = (0 + spiral_x[i]) / 2
-        mid_y = (0 + spiral_y[i]) / 2
-        similarity = poster_data_top_n.iloc[i]['similarity']
-        plt.text(mid_x, mid_y, f"{similarity:.3f}", fontsize=8, color='blue', ha='center', va='center')
+#     for i in range(num_points):
+#         plt.plot([0, spiral_x[i]], [0, spiral_y[i]], 'k--', alpha=0.2)
+#         mid_x = (0 + spiral_x[i]) / 2
+#         mid_y = (0 + spiral_y[i]) / 2
+#         similarity = poster_data_top_n.iloc[i]['similarity']
+#         plt.text(mid_x, mid_y, f"{similarity:.3f}", fontsize=8, color='blue', ha='center', va='center')
 
-    plt.title("Spiral Visualization of Posters with Thumbnails")
-    plt.axis('off')
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=300)
-    plt.close()
+#     plt.title("Spiral Visualization of Posters with Thumbnails")
+#     plt.axis('off')
+#     plt.tight_layout()
+#     plt.savefig(output_path, dpi=300)
+#     plt.close()
+
+
+# def generate_spiral_data(input_img_path, poster_images, similarities, poster_data_top_n):
+#     """Generate spiral layout data for interactive visualization."""
+#     num_points = len(poster_images)
+#     spiral_x, spiral_y = spiral_coordinates(num_points, center=(0, 0), spacing=0.5)
+
+def generate_spiral_data(input_img_path, poster_images, similarities, poster_data_top_n):
+    """Generate spiral layout data for interactive visualization."""
+    num_points = len(poster_images)
+    spiral_x, spiral_y = spiral_coordinates(num_points, center=(0, 0), spacing=40)  # Use constant spacing
+
+    spiral_data = [
+        {
+            "x": float(spiral_x[i]),
+            "y": float(spiral_y[i]),
+            "image_path": poster_images[i],
+            "title": poster_data_top_n.iloc[i]['title'],
+            "similarity": f"{similarities[i]:.2f}",
+            "decade": int(poster_data_top_n.iloc[i]['decade']),
+        }
+        for i in range(num_points)
+    ]
+    return {
+        "center_image": input_img_path,
+        "spiral_data": spiral_data
+    }
+
+
+
 
 
 # ------------------------------
@@ -258,9 +290,7 @@ def summarize_insights(poster_data_top_n):
     """Summarize insights based on metadata of top N posters."""
     if 'all_lincoln_themes' and 'decade' in poster_data_top_n:
         theme_counts = poster_data_top_n['all_lincoln_themes'].explode().value_counts()
-        decade_counts = poster_data_top_n['decade'].explode().value_counts()
-        summary = "### Insights from Top Posters ###\n\n"
-        summary += "#### Themes ####\n"
+        summary = ""
         for theme, count in theme_counts.items():
             summary += f"- {theme}: {count} occurrences\n"
         return summary
@@ -270,11 +300,12 @@ def summarize_insights(poster_data_top_n):
 
 def summarize_historical_classifications(aggregated_results):
     """Summarize top-3 historical context classifications for the posters."""
-    summary = "### Aggregated Historical Context Insights ###\n\n"
+    summary = ""
     for category, top_3 in aggregated_results.items():
-        summary += f"- **{category.capitalize()}**:\n"
+        summary += f"- {category.capitalize()}:\n"
         for label, score in top_3:
             summary += f"    - {label}: {score:.3f}\n"
+        summary += f"\n"
     return summary
 
 

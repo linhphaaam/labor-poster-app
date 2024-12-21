@@ -3,28 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
     <title>Upload or Capture Image</title>
 </head>
 <body>
     <h1>Upload or Capture Image</h1>
     <form id="uploadForm" method="POST" action="/process" enctype="multipart/form-data">
-        <label for="fileInput">Choose a file:</label>
+        <h2>Upload a photo:</h2>
         <input type="file" id="fileInput" name="file" accept="image/*">
 
         <h2>Or capture from your camera:</h2>
         <video id="camera" autoplay playsinline></video>
-        <button type="button" id="captureButton">Capture Photo</button>
+        <img id="capturedImage" style="display:none;" alt="Captured Photo">
         <canvas id="snapshotCanvas" style="display:none;"></canvas>
         <input type="hidden" name="image_data" id="imageData">
 
-        <br><br>
-        <button type="submit">Submit</button>
+        <div class="button-group">
+            <button type="button" id="captureButton">Capture Photo</button>
+            <button type="button" id="retakeButton" style="display:none;">Retake</button>
+        </div>
+
+        <br>
+        <button type="submit" id="submitButton" disabled>Submit</button>
     </form>
 
     <script>
         const video = document.getElementById('camera');
         const canvas = document.getElementById('snapshotCanvas');
+        const capturedImage = document.getElementById('capturedImage');
         const captureButton = document.getElementById('captureButton');
+        const retakeButton = document.getElementById('retakeButton');
         const imageDataInput = document.getElementById('imageData');
         const submitButton = document.querySelector("button[type='submit']");
     
@@ -36,6 +44,15 @@
             .catch((error) => {
                 console.error("Error accessing the camera: ", error);
             });
+
+        // Enable submit button when a file is selected
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                submitButton.disabled = false; // Enable the submit button
+            } else {
+                submitButton.disabled = true; // Disable if no file selected
+            }
+        });
     
         // Capture photo
         captureButton.addEventListener('click', () => {
@@ -51,13 +68,27 @@
             const dataURL = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
             imageDataInput.value = dataURL;
 
-            alert("Photo captured and resized! You can now submit the form.");
-            submitButton.disabled = false; // Enable the submit button
+            // Display captured photo
+            capturedImage.src = dataURL;
+            capturedImage.style.display = 'block';
+            video.style.display = 'none';
+            captureButton.style.display = 'none';
+            retakeButton.style.display = 'inline-block';
+
+            // Enable the submit button
+            submitButton.disabled = false;
         });
-    
-        // Disable submit button initially
-        submitButton.disabled = false;
+
+        // Retake photo
+        retakeButton.addEventListener('click', () => {
+            capturedImage.style.display = 'none';
+            video.style.display = 'block';
+            captureButton.style.display = 'inline-block';
+            retakeButton.style.display = 'none';
+
+            // Disable the submit button until another photo is taken
+            submitButton.disabled = true;
+        });
     </script>
-    
 </body>
 </html>

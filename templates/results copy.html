@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Spiral Visualization</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Side: Insights -->
+        <div class="summary-cluster">
+            <h2>Subject Detection</h2>
+            <div class="input-image">
+                <img src="{{ input_image_url }}" alt="Input Image" class="detected-image">
+                <p>A photo you uploaded</p>
+            </div>
+            <h2>Summary of Cluster</h2>
+            <div id="summary-insights">
+                <pre>{{ combined_insights }}</pre>
+            </div>
+        </div>
+
+        <!-- Center: Interactive Spiral -->
+        <div class="middle">
+            <div class="spiral-container">
+                <h2>Spiral Visualization</h2>
+                <div id="spiralCanvas"></div>
+            </div>
+
+            <div class="timeline-container">
+                <h2>Timeline</h2>
+                <canvas id="decadeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const spiralData = {{ spiral_data | tojson }};
+        const centerImage = "{{ center_image }}";
+
+        function setup() {
+            const canvas = createCanvas(800, 800);
+            canvas.parent('spiralCanvas');
+            textAlign(CENTER, CENTER);
+            imageMode(CENTER);
+        }
+
+        function draw() {
+            background(240);
+            drawCenterImage();
+            drawSpiral();
+        }
+
+        function drawCenterImage() {
+            loadImage(centerImage, img => {
+                image(img, width / 2, height / 2, 120, 160);
+            });
+        }
+
+        function drawSpiral() {
+            spiralData.forEach(poster => {
+                loadImage(poster.image_path, img => {
+                    const posterX = width / 2 + poster.x;
+                    const posterY = height / 2 + poster.y;
+                    image(img, posterX, posterY, 60, 80);
+                });
+            });
+        }
+
+        function mousePressed() {
+            spiralData.forEach(poster => {
+                const posterX = width / 2 + poster.x;
+                const posterY = height / 2 + poster.y;
+                if (dist(mouseX, mouseY, posterX, posterY) < 40) {
+                    alert(`Title: ${poster.title}\nSimilarity: ${poster.similarity}`);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+       <!-- Right Side: Top Poster Details -->
+        <!-- <div class="poster-details">
+            <h2>Top Posters</h2>
+            <div class="poster-list">
+                {% for poster in top_posters %}
+                <div class="poster-item">
+                    <img src="{{ poster.image_path }}" alt="{{ poster.title }}" width="100">
+                    <p><strong>{{ poster.title }}</strong> <br> Decade: {{ poster.decade }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div> -->
+    </div>
+
+    <!-- Timeline: Decade Distribution -->
+    <!-- <div class="timeline-container">
+        <h2>Timeline</h2>
+        <canvas id="decadeChart"></canvas>
+    </div> -->

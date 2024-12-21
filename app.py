@@ -12,14 +12,16 @@ from pipeline import (
     preprocess_image,
     generate_embedding,
     calculate_similarities,
-    visualize_spiral,
+    # visualize_spiral,
     generate_historical_contexts,
     encode_categories,
     zero_shot_classification,
     summarize_insights,
     summarize_historical_classifications,
     save_and_compress_image,
-    preprocess_image_from_base64,
+    spiral_coordinates,
+    # preprocess_image_from_base64,
+    generate_spiral_data,
     model, preprocess, device
 )
 from collections import Counter
@@ -118,9 +120,17 @@ def process_image():
     top_n_embeddings = dataset_text_embeddings[top_indices]
 
     # Generate spiral visualization
-    spiral_plot_filename = f"spiral_plot_{uuid.uuid4().hex}.png"
-    spiral_plot_path = os.path.join(app.config['STATIC_FOLDER'], spiral_plot_filename)
-    visualize_spiral(file_path, top_n_images, top_n_similarities, poster_data_top_n, output_path=spiral_plot_path)
+    # spiral_plot_filename = f"spiral_plot_{uuid.uuid4().hex}.png"
+    # spiral_plot_path = os.path.join(app.config['STATIC_FOLDER'], spiral_plot_filename)
+    # visualize_spiral(file_path, top_n_images, top_n_similarities, poster_data_top_n, output_path=spiral_plot_path)
+
+    # spiral_info = generate_spiral_data(
+    #     file_path, top_n_images, top_n_similarities, poster_data_top_n
+    # )
+
+    spiral_info = generate_spiral_data(
+        file_path, top_n_images, top_n_similarities, poster_data_top_n
+    )
 
     # Historical classification
     aggregated_embedding = np.mean(top_n_embeddings, axis=0).reshape(1, -1)
@@ -131,18 +141,25 @@ def process_image():
     # Combine metadata and historical insights
     metadata_insights = summarize_insights(poster_data_top_n)
     historical_insights = summarize_historical_classifications(historical_classification_results)
-    combined_insights = f"{metadata_insights}\n\n{historical_insights}"
+    # combined_insights = f"{metadata_insights}\n\n{historical_insights}"
+
+    combined_insights = {
+        "metadata_summary": metadata_insights,
+        "historical_summary": historical_insights
+    }
 
     # Calculate decade distribution
     decade_counts = Counter(poster_data_top_n['decade'].dropna())
-    decade_data = sorted(decade_counts.items())  # Ensure it's sorted numerically
+    decade_data = sorted([(int(decade), int(count)) for decade, count in decade_counts.items()])  # Cast to native int
 
     # Save input image path
     input_image_url = f"/uploads/{os.path.basename(file_path)}"
 
     return render_template(
         "results.html",
-        spiral_plot_url=f"/static/{spiral_plot_filename}",
+        # spiral_plot_url=f"/static/{spiral_plot_filename}",
+        spiral_data=spiral_info['spiral_data'],
+        center_image=spiral_info['center_image'],
         combined_insights=combined_insights,
         decade_data=decade_data,  # Pass decade_data to the template
         input_image_url=input_image_url  # Pass input image URL

@@ -3,101 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results</title>
+    <title>Interactive Spiral Visualization</title>
     <link rel="stylesheet" href="/static/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <!-- Left Side: Insights -->
+        <!-- Left Panel: Insights and Input Image -->
         <div class="summary-cluster">
-            <h2>Subject detection</h2>
+            <h2>Input Image</h2>
             <div class="input-image">
                 <img src="{{ input_image_url }}" alt="Input Image" class="detected-image">
-                <p>A photo you uploaded</p>
+                <p>Your uploaded photo</p>
             </div>
-            <h2>Summary of Cluster</h2>
+            <h2>Cluster Insights</h2>
             <div id="summary-insights">
-                <pre>{{ combined_insights }}</pre>
+                <h3>Themes</h3>
+                <pre>{{ combined_insights.metadata_summary }}</pre>
+                <h3>Historical Context</h3>
+                <pre>{{ combined_insights.historical_summary }}</pre>
             </div>
         </div>
 
-        <!-- Center: Spiral Visualization -->
+        <!-- Center Panel: Interactive Spiral -->
         <div class="middle">
-            <div class="spiral-container">
-                <h2>Spiral Visualization</h2>
-                <img src="{{ spiral_plot_url }}" alt="Spiral Visualization of Posters" id="spiral-plot" width="60%">
-            </div>
-
-            <div class="timeline-container">
-                <h2>Timeline</h2>
-                <canvas id="decadeChart"></canvas>
-            </div>
+            <h2>Similarity Visualization</h2>
+            <div id="spiralCanvas"></div>
         </div>
-
-        <!-- Right Side: Top Poster Details -->
-        <!-- <div class="poster-details">
-            <h2>Top Posters</h2>
-            <div class="poster-list">
-                {% for poster in top_posters %}
-                <div class="poster-item">
-                    <img src="{{ poster.image_path }}" alt="{{ poster.title }}" width="100">
-                    <p><strong>{{ poster.title }}</strong> <br> Decade: {{ poster.decade }}</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div> -->
     </div>
 
-    <!-- Timeline: Decade Distribution -->
-    <!-- <div class="timeline-container">
-        <h2>Timeline</h2>
-        <canvas id="decadeChart"></canvas>
-    </div> -->
+    <!-- Modal for showing poster details -->
+    <div id="posterModal" class="modal" style="display: none;">
+        <div class="modal-content top-right">
+            <span class="close-btn">&times;</span>
+            <img id="modalPosterImage" src="" alt="Poster Image" style="width: 100%; max-width: 500px;">
+            <div id="posterDetails" style="text-align: center;">
+                <h3 id="posterTitle"></h3>
+                <p id="posterSimilarity"></p>
+            </div>
+        </div>
+    </div>
 
-    <a href="/">Back to Home</a>
-
-    <!-- JavaScript for Decade Chart -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Include the external JavaScript file -->
     <script>
-        // Data dynamically passed from Flask
-        const decadeData = {{ decade_data | tojson }};
-        const decades = decadeData.map(item => item[0]);  // Extract decades
-        const counts = decadeData.map(item => item[1]);   // Extract counts
-    
-        // Render bar chart with timeline layout
-        const ctx = document.getElementById('decadeChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: decades,  // Decades on x-axis
-                datasets: [{
-                    label: 'Number of Posters',
-                    data: counts,
-                    backgroundColor: '#4285F4',
-                    borderColor: '#357ABD',
-                    borderWidth: 1,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: 'linear',  // Treat x-axis as numeric (timeline)
-                        title: { display: true, text: 'Decade' },
-                        ticks: {
-                            stepSize: 10,  // Ensure decades are spaced linearly
-                            callback: value => `${value}`  // Display decade as label
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Number of Posters' }
-                    }
-                }
-            }
-        });
+        const spiralData = {{ spiral_data | tojson }};
+        const centerImage = "{{ center_image }}";
+        const decadeDataJson = '{{ decade_data | tojson | safe }}';
     </script>
+    <script src="/static/spiral.js"></script>
 </body>
 </html>
